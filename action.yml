@@ -1,44 +1,42 @@
 name: Nix Flake Age Filter Update
-
-description: >
-  Update Nix flake inputs that are older than a specified minimum age.
-  Uses the nix-flake-age-filter tool to skip fresh inputs and only update
-  inputs that meet the min-age threshold.
-
-author: impure0xntk
-
+description: Update Nix flake inputs that are older than a specified minimum age.
 branding:
   icon: clock
   color: blue
-
 inputs:
   min-age:
     description: Minimum age in days. Only inputs older than this will be updated.
     required: true
     default: "30"
-
   flake-lock:
     description: Path to the flake.lock file (relative to repository root).
     required: false
     default: flake.lock
-
+  flake-filter-ref:
+    description: Git ref (commit hash, branch, or tag) of nix-flake-age-filter to use.
+    required: false
+    default: 908af19e14ee6b54e75e55c7d6aa4f2a9c0b1a5b
   dry-run:
     description: If 'true', only show what would be updated without modifying files.
     required: false
     default: "false"
-
-description: >
-  Update Nix flake inputs older than the minimum age.
-
+  skip-nix-install:
+    description: If 'true', skip the Nix installation step. Assumes Nix is already installed on the runner.
+    required: false
+    default: false
+  install-nix-action-ref:
+    description: Git ref (commit hash, tag, or branch) of cachix/install-nix-action to use.
+    required: false
+    default: ab739621df7a23f52766f9ccc97f38da6b7af14f
 runs:
   using: composite
   steps:
     - name: Install Nix
-      uses: cachix/install-nix-action@v30
+      if: inputs.skip-nix-install != 'true'
+      uses: cachix/install-nix-action@${{ inputs.install-nix-action-ref }}
       with:
         extra_nix_config: |
           experimental-features = nix-command flakes
-
     - name: Run nix-flake-age-filter update
       shell: bash
       run: |
@@ -47,6 +45,7 @@ runs:
         MIN_AGE="${{ inputs.min-age }}"
         DRY_RUN="${{ inputs.dry-run }}"
         FLAKE_LOCK="${{ inputs.flake-lock }}"
+        FLAKE_FILTER_REF="${{ inputs.flake-filter-ref }}"
 
         ARGS=("update" "--min-age" "$MIN_AGE" "$FLAKE_LOCK")
 
@@ -55,9 +54,8 @@ runs:
         fi
 
         echo "::group::nix-flake-age-filter"
-        nix run "github:impure0xntk/nix-flake-age-filter?ref=main" -- "${ARGS[@]}"
+        nix run "github:impure0xntk/nix-flake-age-filter?ref=${FLAKE_FILTER_REF}" -- "${ARGS[@]}"
         echo "::endgroup::"
-
     - name: Show updated flake.lock diff
       shell: bash
       if: inputs.dry-run != 'true'

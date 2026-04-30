@@ -33,6 +33,10 @@ steps:
     # Path to flake.lock (default: flake.lock)
     flake-lock: flake.lock
 
+    # Git ref (commit hash, branch, or tag) of nix-flake-age-filter (default: pinned commit)
+    # Pin to a specific commit hash for supply chain security
+    flake-filter-ref: "908af19e14ee6b54e75e55c7d6aa4f2a9c0b1a5b"
+
     # Dry-run mode (default: false)
     dry-run: "false"
 ```
@@ -76,6 +80,7 @@ jobs:
 |-------|----------|---------|-------------|
 | `min-age` | ✅ | `30` | Minimum age in days for flake inputs |
 | `flake-lock` | ❌ | `flake.lock` | Path to flake.lock |
+| `flake-filter-ref` | ❌ | `908af19e14ee6b54e75e55c7d6aa4f2a9c0b1a5b` | Git ref (commit hash, branch, or tag) of nix-flake-age-filter. Pin to a specific commit hash for supply chain security |
 | `dry-run` | ❌ | `false` | Dry-run mode (no changes) |
 
 ## Development

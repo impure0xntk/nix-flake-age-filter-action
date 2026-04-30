@@ -32,6 +32,8 @@ jobs:
         with:
           min-age: ${{ github.event_name == 'schedule' && '30' || inputs.min-age }}
           dry-run: ${{ github.event_name == 'schedule' && 'false' || inputs.dry-run }}
+          # Pin to a specific commit hash for supply chain security
+          flake-filter-ref: "908af19e14ee6b54e75e55c7d6aa4f2a9c0b1a5b"
 
       - name: Create Pull Request
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry-run != 'true' }}
