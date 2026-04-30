@@ -39,6 +39,12 @@ steps:
 
     # Dry-run mode (default: false)
     dry-run: "false"
+
+    # Skip nix install (default: false)
+    skip-nix-instal: "false"
+
+    # GitHub token for higher API rate limit (default: (empty))
+    github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Scheduled update with auto PR
@@ -82,6 +88,8 @@ jobs:
 | `flake-lock` | ❌ | `flake.lock` | Path to flake.lock |
 | `flake-filter-ref` | ❌ | `908af19e14ee6b54e75e55c7d6aa4f2a9c0b1a5b` | Git ref (commit hash, branch, or tag) of nix-flake-age-filter. Pin to a specific commit hash for supply chain security |
 | `dry-run` | ❌ | `false` | Dry-run mode (no changes) |
+| `skip-nix-install` | ❌ | `false` | Skip nix install |
+| `github-token` | ❌ | (empty) | GitHub token for higher API rate limits (passed to nix-flake-age-filter as --github-token) |
 
 ## Development
 
@@ -94,6 +102,9 @@ actionlint
 
 # Check shell scripts
 shellcheck *.sh
+
+# Run test via act
+act -W tests/test-action.yml
 ```
 
 ## Related projects
@@ -102,4 +113,4 @@ shellcheck *.sh
 
 ## License
 
-MIT
+Apache-2.0

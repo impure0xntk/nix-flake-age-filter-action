@@ -23,19 +23,19 @@ inputs:
   skip-nix-install:
     description: If 'true', skip the Nix installation step. Assumes Nix is already installed on the runner.
     required: false
-    default: false
-  install-nix-action-ref:
-    description: Git ref (commit hash, tag, or branch) of cachix/install-nix-action to use.
+    default: "false"
+  github-token:
+    description: GitHub token for higher API rate limits (passed to nix-flake-age-filter as --github-token).
     required: false
-    default: ab739621df7a23f52766f9ccc97f38da6b7af14f
+    default: ""
 runs:
   using: composite
   steps:
     - name: Install Nix
       if: inputs.skip-nix-install != 'true'
-      uses: cachix/install-nix-action@${{ inputs.install-nix-action-ref }}
+      uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
       with:
-        extra_nix_config: |
+        extra-conf: |
           experimental-features = nix-command flakes
     - name: Run nix-flake-age-filter update
       shell: bash
@@ -46,11 +46,16 @@ runs:
         DRY_RUN="${{ inputs.dry-run }}"
         FLAKE_LOCK="${{ inputs.flake-lock }}"
         FLAKE_FILTER_REF="${{ inputs.flake-filter-ref }}"
+        GH_TOKEN="${{ inputs.github-token }}"
 
         ARGS=("update" "--min-age" "$MIN_AGE" "$FLAKE_LOCK")
 
         if [ "$DRY_RUN" = "true" ]; then
           ARGS+=("--dry-run")
+        fi
+
+        if [ -n "$GH_TOKEN" ]; then
+          ARGS+=("--github-token" "$GH_TOKEN")
         fi
 
         echo "::group::nix-flake-age-filter"

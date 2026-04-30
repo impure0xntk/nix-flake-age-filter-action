@@ -22,18 +22,36 @@
             shellcheck
             yq-go
           ];
-          shellHook = ''
-            echo -e "\033[1;34mnix-flake-age-filter-action\033[0m"
-          '';
         };
 
-        checks.static-check = pkgs.runCommand "static-check" {
-          buildInputs = [ pkgs.yq-go ];
-        } ''
-          export TMPDIR="$(mktemp -d)"
-          yq eval '.' ${self}/action.yml > /dev/null
-          touch $out
-        '';
-      }
-    );
+        checks = {
+          test-action-check = pkgs.runCommand "test-action-check"
+            {
+              buildInputs = [ pkgs.yq-go ];
+            }
+            ''
+              yq eval '.' ${self}/action.yml > /dev/null
+              touch $out
+            '';
+
+          test-action-workflow-check = pkgs.runCommand "test-action-workflow-check"
+            {
+              buildInputs = [ pkgs.yq-go pkgs.actionlint ];
+            }
+            ''
+              yq eval '.' ${self}/tests/test-action.yml > /dev/null
+              actionlint ${self}/tests/test-action.yml
+              touch $out
+            '';
+
+          test-action-syntax-check = pkgs.runCommand "test-action-syntax-check"
+            {
+              buildInputs = [ pkgs.yq-go ];
+            }
+            ''
+              yq eval '.jobs.*.steps[] | select(.uses == "./") | .uses' ${self}/tests/test-action.yml > /dev/null
+              touch $out
+            '';
+        };
+      });
 }

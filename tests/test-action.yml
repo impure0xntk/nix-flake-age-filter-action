@@ -1,0 +1,64 @@
+name: Test Nix Flake Age Filter Action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test with dry-run (mixed ages)
+        uses: ./
+        with:
+          min-age: "30"
+          dry-run: "true"
+          flake-lock: tests/fixtures/mixed_age.lock
+
+  test-dry-run-all-new:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test with dry-run (all inputs new)
+        uses: ./
+        with:
+          min-age: "30"
+          dry-run: "true"
+          flake-lock: tests/fixtures/all_new.lock
+
+  test-skip-nix-install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix manually
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+        with:
+          extra-conf: |
+            experimental-features = nix-command flakes
+
+      - name: Test with skip-nix-install
+        uses: ./
+        with:
+          min-age: "30"
+          dry-run: "true"
+          skip-nix-install: "true"
+          flake-lock: tests/fixtures/mixed_age.lock
+
+  test-custom-min-age:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test with custom min-age (7 days)
+        uses: ./
+        with:
+          min-age: "7"
+          dry-run: "true"
+          flake-lock: tests/fixtures/mixed_age.lock
