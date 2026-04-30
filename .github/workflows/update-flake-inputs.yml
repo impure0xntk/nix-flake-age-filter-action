@@ -1,0 +1,45 @@
+name: Weekly Nix Flake Input Update
+
+on:
+  schedule:
+    # Every Monday at 03:00 UTC
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      min-age:
+        description: Minimum age in days for flake inputs
+        required: true
+        default: "7"
+        type: string
+
+jobs:
+  update-flake-inputs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update flake inputs (min-age filter)
+        uses: impure0xntk/nix-flake-age-filter-action@v1
+        with:
+          min-age: ${{ github.event_name == 'schedule' && '30' || inputs.min-age }}
+          # Pin to a specific commit hash for supply chain security
+          flake-filter-ref: "908af19e14ee6b54e75e55c7d6aa4f2a9c0b1a5b"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update flake inputs (min-age filter)"
+          title: "chore: update flake inputs (min-age filter)"
+          body: |
+            Automated update of Nix flake inputs using [nix-flake-age-filter](https://github.com/impure0xntk/nix-flake-age-filter).
+
+            Only inputs older than the minimum age threshold are updated.
+          branch: chore/update-flake-inputs
+          delete-branch: true

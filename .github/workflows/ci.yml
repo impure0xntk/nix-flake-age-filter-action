@@ -7,34 +7,18 @@ on:
     branches: [main]
 
 jobs:
-  lint-action:
+  check-action:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Lint action.yml
-        uses: actionshub/actionlint@main
-
-  validate-action:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Validate action metadata
-        uses: cardinalby/jsonschema-validator-action@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
         with:
-          schema: https://json.schemastore.org/github-action.json
-          file: ./action.yml
+          extra-conf: |
+            experimental-features = nix-command flakes
 
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check shell script formatting
-        uses: luizm/action-sh-checker@v0.9.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SHELLCHECK_OPTS: "-e SC2086"
-        with:
-          sh_checker_comment: true
+      - name: Nix Flake Check
+        shell: bash
+        run: |
+          nix flake check
