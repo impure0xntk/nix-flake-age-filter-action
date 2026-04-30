@@ -1,9 +1,9 @@
-name: Weekly Nix Flake Input Update
+name: Nix Flake Input Update
 
 on:
-  schedule:
-    # Every Monday at 03:00 UTC
-    - cron: "0 3 * * 1"
+  # schedule:
+  #   # Every Monday at 03:00 UTC
+  #   - cron: "0 3 * * 1"
   workflow_dispatch:
     inputs:
       min-age:
@@ -26,13 +26,11 @@ jobs:
         uses: impure0xntk/nix-flake-age-filter-action@v1
         with:
           min-age: ${{ github.event_name == 'schedule' && '30' || inputs.min-age }}
-          # Pin to a specific commit hash for supply chain security
           flake-filter-ref: "908af19e14ee6b54e75e55c7d6aa4f2a9c0b1a5b"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Pull Request
-        if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: update flake inputs (min-age filter)"
