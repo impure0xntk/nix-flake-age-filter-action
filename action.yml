@@ -1,0 +1,71 @@
+name: Nix Flake Age Filter Update
+
+description: >
+  Update Nix flake inputs that are older than a specified minimum age.
+  Uses the nix-flake-age-filter tool to skip fresh inputs and only update
+  inputs that meet the min-age threshold.
+
+author: impure0xntk
+
+branding:
+  icon: clock
+  color: blue
+
+inputs:
+  min-age:
+    description: Minimum age in days. Only inputs older than this will be updated.
+    required: true
+    default: "30"
+
+  flake-lock:
+    description: Path to the flake.lock file (relative to repository root).
+    required: false
+    default: flake.lock
+
+  dry-run:
+    description: If 'true', only show what would be updated without modifying files.
+    required: false
+    default: "false"
+
+description: >
+  Update Nix flake inputs older than the minimum age.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Nix
+      uses: cachix/install-nix-action@v30
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+
+    - name: Run nix-flake-age-filter update
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        MIN_AGE="${{ inputs.min-age }}"
+        DRY_RUN="${{ inputs.dry-run }}"
+        FLAKE_LOCK="${{ inputs.flake-lock }}"
+
+        ARGS=("update" "--min-age" "$MIN_AGE" "$FLAKE_LOCK")
+
+        if [ "$DRY_RUN" = "true" ]; then
+          ARGS+=("--dry-run")
+        fi
+
+        echo "::group::nix-flake-age-filter"
+        nix run "github:impure0xntk/nix-flake-age-filter?ref=main" -- "${ARGS[@]}"
+        echo "::endgroup::"
+
+    - name: Show updated flake.lock diff
+      shell: bash
+      if: inputs.dry-run != 'true'
+      run: |
+        if git diff --name-only | grep -qF "${{ inputs.flake-lock }}"; then
+          echo "::group::flake.lock diff"
+          git diff "${{ inputs.flake-lock }}"
+          echo "::endgroup::"
+        else
+          echo "No changes to ${{ inputs.flake-lock }} - all inputs already meet min-age."
+        fi
